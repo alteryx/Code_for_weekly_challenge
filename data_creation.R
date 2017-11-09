@@ -150,23 +150,29 @@ getSalesTotal <- function(
   in.month_si
 ){
   if (in.category_sc == 'Produce'){
-    return(
-      getSalesTotalProduce(
-        in.storeID_sc = in.storeID_sc,
-        in.year_si = in.year_si,
-        in.month_si = in.month_si
-      )
+    total_sn = getSalesTotalProduce(
+      in.storeID_sc = in.storeID_sc,
+      in.year_si = in.year_si,
+      in.month_si = in.month_si
     )
   } else {
-    return(
-      getSalesTotalNonProduce(
-        in.category_sc = in.category_sc,
-        in.storeID_sc = in.storeID_sc,
-        in.year_si = in.year_si,
-        in.month_si = in.month_si
-      )
+    total_sn = getSalesTotalNonProduce(
+      in.category_sc = in.category_sc,
+      in.storeID_sc = in.storeID_sc,
+      in.year_si = in.year_si,
+      in.month_si = in.month_si
     )
   }
+  total_sn = max(
+    total_sn,
+    0
+  )
+  return(
+    round(
+      x = total_sn,
+      digits = 2
+    )
+  )
 }
 sales_df <- dates_df
 sales_df$Week_start_dates <- as.POSIXct(x = sales_df$Week_start_dates)
@@ -217,26 +223,24 @@ salesByStore_l <- lapply(
     )
     return(
       data.frame(
-        sales_df,
+        Week_start_dates = sales_df$Week_start_dates,
         salesTotalsByCategory_df
       )
     )
   }
 )
 
-#Check to make sure there are no negative sales totals
-negativeValuesIndicators_l <- lapply(
-  X = salesByStore_l,
-  FUN = function(in.sales_df){
-    salesColumnsOnly_df <- in.sales_df[
-      ,
-      !(colnames(in.sales_df) %in% c(
-        'Week_start_dates', 
-        'Month', 
-        'Year'
-        )
-      )
-    ]
-    return(any(salesColumnsOnly_df < 0))
+lapply(
+  X = list(1, 2, 3, 4, 5),
+  FUN = function(in.index_si){
+    write.csv(
+      x = salesByStore_l[[in.index_si]],
+      file = paste0(
+        'PSL/dataFromStoreS0',
+        in.index_si,
+        '.csv'
+      ),
+      row.names = FALSE
+    )
   }
 )
